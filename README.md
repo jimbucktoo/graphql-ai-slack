@@ -1,4 +1,4 @@
-# GraphQLAI Slack
+# graphql-ai-slack
 
 GraphQLAI Slack is a Slack integration that lets developers generate schema-compliant GraphQL queries from plain English directly inside Slack — no context switching required. Type `/graphql get all users with their name and email` and get a ready-to-use, formatted query back instantly. The app is a thin integration layer built on Slack Bolt that delegates all query generation to the existing [GraphQLAI API](https://graphql-ai-api.onrender.com), meaning it stays lightweight, schema-aware, and easy to deploy anywhere Python runs.
 
@@ -8,9 +8,7 @@ GraphQLAI Slack is a Slack integration that lets developers generate schema-comp
 - [GraphQLAI Back-End](https://graphql-ai-api.onrender.com) — GraphQLAI Back-End Server
 - [GraphQLAI Repository](https://github.com/jimbucktoo/graphql-ai/) — GraphQLAI Github Repository
 - [GraphQLAI API Repository](https://github.com/jimbucktoo/graphql-ai-api/) — GraphQLAI API Github Repository
-- [GraphQLAI Slack Repository](https://github.com/jimbucktoo/graphqlai-slack/) — GraphQLAI Slack Github Repository
-
----
+- [GraphQLAI Slack Repository](https://github.com/jimbucktoo/graphql-ai-slack/) — GraphQLAI Slack Github Repository
 
 ## Architecture
 
@@ -54,32 +52,63 @@ graphqlai-slack/
 └── requirements.txt
 ```
 
----
-
 ## Prerequisites
 
 - Python 3.10+
 - A Slack workspace where you can create and install apps
 - The GraphQLAI API already deployed (default: `https://graphql-ai-api.onrender.com`)
 
----
-
 ## Slack App Setup
 
-1. Go to [api.slack.com/apps](https://api.slack.com/apps) and click **Create New App → From scratch**.
-2. **Enable Socket Mode** under *Settings → Socket Mode*. Generate an **App-Level Token** with the `connections:write` scope — this is your `SLACK_APP_TOKEN` (`xapp-…`).
-3. Under *Features → Slash Commands*, click **Create New Command**:
-   - Command: `/graphql`
-   - Short description: `Generate a GraphQL query from plain English`
-   - Request URL: leave blank (Socket Mode handles routing)
-4. Under *OAuth & Permissions → Scopes → Bot Token Scopes*, add:
-   - `commands`
-   - `chat:write`
-   - `chat:write.public`
-5. Under *Features → Workflow Steps*, enable **Workflow Steps** and add a step with callback ID `generate_graphql_query`.
-6. Click **Install to Workspace** and copy the **Bot User OAuth Token** (`xoxb-…`) and the **Signing Secret** from *Basic Information*.
+### 1. Create the Slack App
 
----
+1. Go to [api.slack.com/apps](https://api.slack.com/apps) and click **Create New App → From scratch**
+2. Name it `GraphQLAI` and select your workspace
+
+### 2. Enable Socket Mode
+
+1. In the left sidebar go to **Settings → Socket Mode** and toggle it on
+2. Click **Generate an App-Level Token**, name it anything (e.g. `socket-token`), and add the `connections:write` scope
+3. Copy the token — this is your `SLACK_APP_TOKEN` (`xapp-…`)
+
+### 3. Add the Slash Command
+
+1. Go to **Features → Slash Commands → Create New Command**
+   - Command: `/graphql`
+   - Request URL: any placeholder URL (Socket Mode ignores it)
+   - Short description: `Generate a GraphQL query from plain English`
+2. Click **Save**
+
+### 4. Add OAuth Scopes
+
+1. Go to **Features → OAuth & Permissions → Scopes → Bot Token Scopes**
+2. Add: `commands`, `chat:write`, `chat:write.public`
+
+### 5. Enable Workflow Steps
+
+1. Go to **Features → Workflow Steps** and toggle it on
+
+### 6. Install to Workspace
+
+1. Go to **Settings → Install App → Install to Workspace** and click **Allow**
+2. Copy the **Bot User OAuth Token** (`xoxb-…`) — this is your `SLACK_BOT_TOKEN`
+3. Go to **Settings → Basic Information** and copy the **Signing Secret** — this is your `SLACK_SIGNING_SECRET`
+
+### 7. Configure Your `.env`
+
+```bash
+cp .env.example .env
+```
+
+Fill in the values:
+
+```
+SLACK_BOT_TOKEN=xoxb-...
+SLACK_SIGNING_SECRET=...
+SLACK_APP_TOKEN=xapp-...
+GRAPHQLAI_API_URL=https://graphql-ai-api.onrender.com
+GRAPHQL_ENDPOINT=https://your-target-graphql-endpoint.com/graphql
+```
 
 ## Local Setup
 
@@ -91,17 +120,13 @@ cp .env.example .env
 # edit .env and fill in your tokens and GraphQL endpoint
 ```
 
----
-
 ## Running
 
 ```bash
 python app.py
 ```
 
-On startup you will see a log line confirming the registered commands and the API URL in use.
-
----
+Once you see the startup log, go to Slack and type `/graphql get all users with their name and email`.
 
 ## Usage Examples
 
@@ -115,8 +140,6 @@ On startup you will see a log line confirming the registered commands and the AP
 
 Each command returns a formatted, copy-paste-ready GraphQL query inside Slack. If the API cannot produce a valid query, it returns the best attempt along with the validation errors so you can rephrase and try again.
 
----
-
 ## Workflow Builder
 
 The app registers a Workflow Step called **Generate GraphQL Query** (`generate_graphql_query`) that you can use inside Slack's no-code Workflow Builder:
@@ -129,8 +152,6 @@ The app registers a Workflow Step called **Generate GraphQL Query** (`generate_g
 
 You can pass these outputs into subsequent steps such as sending a message, updating a sheet, or calling a webhook.
 
----
-
 ## Deployment
 
 Socket Mode works great for local development without a public URL. For production:
@@ -138,8 +159,6 @@ Socket Mode works great for local development without a public URL. For producti
 1. Replace `SocketModeHandler` with an HTTP adapter (e.g. `from slack_bolt.adapter.flask import SlackRequestHandler`).
 2. Point your Slash Command's **Request URL** at your deployed server's `/slack/events` endpoint.
 3. Deploy to **Render**, **Railway**, **Fly.io**, or any platform that supports Python. Set the environment variables listed in `.env.example` as secrets/config vars on your host.
-
----
 
 ## Technologies
 
