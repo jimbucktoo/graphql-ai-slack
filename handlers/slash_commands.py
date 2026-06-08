@@ -25,7 +25,7 @@ def register_slash_commands(app: App, client: GraphQLAIClient) -> None:
     @app.command(SLASH_COMMAND)
     def handle_graphql_command(ack: Callable, body: dict, respond: Callable) -> None:
         """Handle the /graphql slash command."""
-        ack()
+        ack("Generating your query, please wait...")
 
         prompt: str = body.get("text", "").strip()
         if not prompt:
